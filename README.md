@@ -13,6 +13,13 @@ compatible model files.
 If this project is useful, please star the GitHub repository or credit the
 project under the MIT License terms.
 
+## Prebuilt Windows Packages
+
+- [CPU-only package](https://github.com/JHKS24/AutoCensoR-CPU-Only/releases/tag/v0.1.0)
+- [Full runtime package](https://github.com/JHKS24/AutoCensoR-Full/releases/tag/v0.1.0)
+
+Model weights are not included in either package.
+
 ## Features
 
 - React + TypeScript + Vite browser UI with Korean and English labels.
