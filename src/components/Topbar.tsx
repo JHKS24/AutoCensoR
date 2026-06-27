@@ -89,6 +89,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [draftDirty, setDraftDirty] = useState(false);
   const [draftFocused, setDraftFocused] = useState(false);
   const titlebarDragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const titlebarToggleAtRef = useRef(0);
   const [desktopWindowControls, setDesktopWindowControls] = useState(
     () => isDesktopLaunch() || Boolean((window as DesktopWindowBridge).pywebview?.platform && (window as DesktopWindowBridge).pywebview?.api?.pick_folder)
   );
@@ -202,13 +203,25 @@ export const Topbar: React.FC<TopbarProps> = ({
   const isTitlebarInteractiveTarget = (target: HTMLElement) =>
     Boolean(target.closest('button,input,select,textarea,a,.topbar-window-controls'));
 
+  const triggerTitlebarMaximizeToggle = (event: React.MouseEvent<HTMLElement>) => {
+    if (!desktopChromeActive || event.button !== 0) return;
+    const target = event.target as HTMLElement;
+    if (isTitlebarInteractiveTarget(target)) return;
+    event.preventDefault();
+    titlebarDragStartRef.current = null;
+
+    const now = Date.now();
+    if (now - titlebarToggleAtRef.current < 300) return;
+    titlebarToggleAtRef.current = now;
+    void requestDesktopWindowAction('toggle-maximize');
+  };
+
   const handleTitlebarMouseDown = (event: React.MouseEvent<HTMLElement>) => {
     if (!desktopChromeActive || event.button !== 0) return;
     const target = event.target as HTMLElement;
     if (isTitlebarInteractiveTarget(target)) return;
     if (event.detail >= 2) {
-      event.preventDefault();
-      titlebarDragStartRef.current = null;
+      triggerTitlebarMaximizeToggle(event);
       return;
     }
     titlebarDragStartRef.current = { x: event.screenX, y: event.screenY };
@@ -232,11 +245,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   const handleTitlebarDoubleClick = (event: React.MouseEvent<HTMLElement>) => {
-    if (!desktopChromeActive || event.button !== 0) return;
-    const target = event.target as HTMLElement;
-    if (isTitlebarInteractiveTarget(target)) return;
-    event.preventDefault();
-    void requestDesktopWindowAction('toggle-maximize');
+    triggerTitlebarMaximizeToggle(event);
   };
 
   const handleScanTypedPath = () => {

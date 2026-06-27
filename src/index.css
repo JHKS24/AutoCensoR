@@ -489,6 +489,17 @@ button.danger:hover:not(:disabled) {
   justify-content: center;
 }
 
+.desktop-titlebar .topbar-window-controls button {
+  width: 44px;
+  min-width: 44px;
+  min-height: 34px;
+}
+
+.topbar-window-controls button svg {
+  display: block;
+  flex-shrink: 0;
+}
+
 .topbar-window-controls button:hover:not(:disabled) {
   background-color: var(--color-panel);
   color: var(--color-text);
