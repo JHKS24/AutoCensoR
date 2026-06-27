@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSettings } from '../settings/SettingsContext';
 import { shouldUseProtectedLabels } from '../settings/privacyDisplay';
 
@@ -21,7 +21,6 @@ import {
   FileText,
   Search,
   Minus,
-  Maximize2,
   X
 } from 'lucide-react';
 
@@ -89,6 +88,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [draftInput, setDraftInput] = useState(settings.runConfig.input_dir);
   const [draftDirty, setDraftDirty] = useState(false);
   const [draftFocused, setDraftFocused] = useState(false);
+  const titlebarDragStartRef = useRef<{ x: number; y: number } | null>(null);
   const [desktopWindowControls, setDesktopWindowControls] = useState(
     () => isDesktopLaunch() || Boolean((window as DesktopWindowBridge).pywebview?.platform && (window as DesktopWindowBridge).pywebview?.api?.pick_folder)
   );
@@ -199,11 +199,44 @@ export const Topbar: React.FC<TopbarProps> = ({
     void requestDesktopWindowAction('close');
   };
 
-  const handleStartWindowDrag = (event: React.PointerEvent<HTMLElement>) => {
+  const isTitlebarInteractiveTarget = (target: HTMLElement) =>
+    Boolean(target.closest('button,input,select,textarea,a,.topbar-window-controls'));
+
+  const handleTitlebarMouseDown = (event: React.MouseEvent<HTMLElement>) => {
     if (!desktopChromeActive || event.button !== 0) return;
     const target = event.target as HTMLElement;
-    if (target.closest('button,input,select,textarea,a')) return;
+    if (isTitlebarInteractiveTarget(target)) return;
+    if (event.detail >= 2) {
+      event.preventDefault();
+      titlebarDragStartRef.current = null;
+      return;
+    }
+    titlebarDragStartRef.current = { x: event.screenX, y: event.screenY };
+  };
+
+  const handleTitlebarMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+    const start = titlebarDragStartRef.current;
+    if (!desktopChromeActive || !start) return;
+    if ((event.buttons & 1) !== 1) {
+      titlebarDragStartRef.current = null;
+      return;
+    }
+    const distance = Math.abs(event.screenX - start.x) + Math.abs(event.screenY - start.y);
+    if (distance < 4) return;
+    titlebarDragStartRef.current = null;
     void requestDesktopWindowAction('drag');
+  };
+
+  const handleTitlebarMouseUp = () => {
+    titlebarDragStartRef.current = null;
+  };
+
+  const handleTitlebarDoubleClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (!desktopChromeActive || event.button !== 0) return;
+    const target = event.target as HTMLElement;
+    if (isTitlebarInteractiveTarget(target)) return;
+    event.preventDefault();
+    void requestDesktopWindowAction('toggle-maximize');
   };
 
   const handleScanTypedPath = () => {
@@ -217,40 +250,95 @@ export const Topbar: React.FC<TopbarProps> = ({
     updateRunConfig({ device_mode: e.target.value as RunConfig['device_mode'] });
   };
 
-  return (
-    <>
-    <header className={`topbar${desktopChromeActive ? ' topbar-desktop-window' : ''}`}>
-      {/* App Branding & Logo */}
-      <div
-        className="topbar-brand pywebview-drag-region"
-        title={settings.uiPrefs.language === 'ko' ? '창 이동' : 'Move window'}
-        onPointerDown={handleStartWindowDrag}
+  const windowControlButtons = desktopChromeActive ? (
+    <div
+      className="topbar-window-controls"
+      aria-label={settings.uiPrefs.language === 'ko' ? '창 제어' : 'Window controls'}
+    >
+      <button
+        type="button"
+        onClick={handleMinimizeWindow}
+        data-action="window-minimize"
+        title={settings.uiPrefs.language === 'ko' ? '최소화' : 'Minimize'}
+        aria-label={settings.uiPrefs.language === 'ko' ? '최소화' : 'Minimize'}
       >
-        <div style={{
-          width: '28px',
-          height: '28px',
-          borderRadius: '6px',
-          background: 'var(--color-panel)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-          border: '1px solid var(--color-border)'
-        }}>
-          <img
-            src="/app-icon.png"
-            alt=""
-            aria-hidden="true"
-            style={{ width: '100%', height: '100%', display: 'block' }}
-          />
+        <Minus size={15} />
+      </button>
+      <button
+        type="button"
+        onClick={handleToggleMaximizeWindow}
+        data-action="window-maximize"
+        title={settings.uiPrefs.language === 'ko' ? '최대화/복원' : 'Maximize or restore'}
+        aria-label={settings.uiPrefs.language === 'ko' ? '최대화/복원' : 'Maximize or restore'}
+      >
+        <Square size={12} />
+      </button>
+      <button
+        type="button"
+        onClick={handleCloseWindow}
+        data-action="window-close"
+        className="topbar-window-close"
+        title={settings.uiPrefs.language === 'ko' ? '닫기' : 'Close'}
+        aria-label={settings.uiPrefs.language === 'ko' ? '닫기' : 'Close'}
+      >
+        <X size={15} />
+      </button>
+    </div>
+  ) : null;
+
+  return (
+    <div className={`topbar-stack${desktopChromeActive ? ' topbar-stack-desktop' : ''}`}>
+      {desktopChromeActive && (
+        <div
+          className="desktop-titlebar"
+          title={settings.uiPrefs.language === 'ko' ? '창 이동 / 더블클릭으로 최대화' : 'Move window / double-click to maximize'}
+          onMouseDown={handleTitlebarMouseDown}
+          onMouseMove={handleTitlebarMouseMove}
+          onMouseUp={handleTitlebarMouseUp}
+          onMouseLeave={handleTitlebarMouseUp}
+          onDoubleClick={handleTitlebarDoubleClick}
+        >
+          <div className="desktop-titlebar-brand">
+            <img src="/app-icon.png" alt="" aria-hidden="true" />
+            <span>{protectedUi ? (settings.uiPrefs.language === 'ko' ? '보호 작업' : 'Protected Workspace') : strings.appTitle}</span>
+          </div>
+          <div className="desktop-titlebar-drag-space" aria-hidden="true" />
+          {windowControlButtons}
         </div>
-        <h1 className="topbar-title">
-          {protectedUi ? (settings.uiPrefs.language === 'ko' ? '보호 작업' : 'Protected Workspace') : strings.appTitle}
-          <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--color-primary)', marginLeft: '4px', verticalAlign: 'middle', background: 'var(--color-selection)', padding: '1px 5px', borderRadius: '3px' }}>
-            vNext
-          </span>
-        </h1>
-      </div>
+      )}
+      <header className={`topbar${desktopChromeActive ? ' topbar-toolbar-desktop' : ''}`}>
+      {/* App Branding & Logo */}
+      {!desktopChromeActive && (
+        <div
+          className="topbar-brand pywebview-drag-region"
+          title={settings.uiPrefs.language === 'ko' ? '창 이동' : 'Move window'}
+        >
+          <div style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '6px',
+            background: 'var(--color-panel)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            border: '1px solid var(--color-border)'
+          }}>
+            <img
+              src="/app-icon.png"
+              alt=""
+              aria-hidden="true"
+              style={{ width: '100%', height: '100%', display: 'block' }}
+            />
+          </div>
+          <h1 className="topbar-title">
+            {protectedUi ? (settings.uiPrefs.language === 'ko' ? '보호 작업' : 'Protected Workspace') : strings.appTitle}
+            <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--color-primary)', marginLeft: '4px', verticalAlign: 'middle', background: 'var(--color-selection)', padding: '1px 5px', borderRadius: '3px' }}>
+              vNext
+            </span>
+          </h1>
+        </div>
+      )}
 
       {/* Inputs (Folder Scanning) */}
       <div className="topbar-folder-group">
@@ -464,42 +552,7 @@ export const Topbar: React.FC<TopbarProps> = ({
       >
         <SettingsIcon size={16} />
       </button>
-    </header>
-      <div
-        className="topbar-window-controls"
-        aria-label={settings.uiPrefs.language === 'ko' ? '창 제어' : 'Window controls'}
-        aria-hidden={!desktopChromeActive}
-        style={{ display: desktopChromeActive ? 'flex' : 'none' }}
-      >
-        <button
-          type="button"
-          onClick={handleMinimizeWindow}
-          data-action="window-minimize"
-          title={settings.uiPrefs.language === 'ko' ? '최소화' : 'Minimize'}
-          aria-label={settings.uiPrefs.language === 'ko' ? '최소화' : 'Minimize'}
-        >
-          <Minus size={15} />
-        </button>
-        <button
-          type="button"
-          onClick={handleToggleMaximizeWindow}
-          data-action="window-maximize"
-          title={settings.uiPrefs.language === 'ko' ? '최대화/복원' : 'Maximize or restore'}
-          aria-label={settings.uiPrefs.language === 'ko' ? '최대화/복원' : 'Maximize or restore'}
-        >
-          <Maximize2 size={14} />
-        </button>
-        <button
-          type="button"
-          onClick={handleCloseWindow}
-          data-action="window-close"
-          className="topbar-window-close"
-          title={settings.uiPrefs.language === 'ko' ? '닫기' : 'Close'}
-          aria-label={settings.uiPrefs.language === 'ko' ? '닫기' : 'Close'}
-        >
-          <X size={15} />
-        </button>
-      </div>
-    </>
+      </header>
+    </div>
   );
 };

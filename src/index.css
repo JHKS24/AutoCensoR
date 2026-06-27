@@ -150,15 +150,77 @@ body {
 }
 
 /* ─── Top Bar ─── */
+.topbar-stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+}
+
+.desktop-titlebar {
+  position: relative;
+  height: 34px;
+  min-height: 34px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(96px, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding-left: 8px;
+  padding-right: 132px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  user-select: none;
+  overflow: hidden;
+}
+
+.desktop-titlebar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.desktop-titlebar-brand img {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-panel);
+  display: block;
+}
+
+.desktop-titlebar-brand span {
+  white-space: nowrap;
+}
+
+.desktop-titlebar-drag-space {
+  align-self: stretch;
+  min-width: 0;
+}
+
 .topbar {
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   padding: 5px 0 5px 8px;
   z-index: 10;
-  box-shadow: var(--shadow-sm);
   gap: 6px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -171,13 +233,13 @@ body {
 }
 
 .topbar-desktop-window {
-  padding-left: 130px;
+  padding-left: 8px;
   padding-right: 8px;
 }
 
-html[data-desktop-window="true"] .topbar {
-  padding-left: 130px;
-  padding-right: 8px;
+.topbar-toolbar-desktop {
+  min-height: 38px;
+  padding: 4px 8px;
 }
 
 .topbar-brand,
@@ -188,11 +250,6 @@ html[data-desktop-window="true"] .topbar {
   align-items: center;
   gap: 6px;
   min-width: 0;
-}
-
-html[data-desktop-window="true"] .topbar-window-controls,
-.topbar-desktop-window ~ .topbar-window-controls {
-  display: flex;
 }
 
 .topbar-brand {
@@ -391,27 +448,35 @@ button.danger:hover:not(:disabled) {
 
 .topbar-window-controls {
   order: 6;
-  position: fixed;
-  top: 0;
-  right: auto;
-  left: 0;
-  height: 42px;
+  height: 100%;
   flex: 0 0 auto;
-  display: none;
+  display: flex;
   align-items: stretch;
   align-self: stretch;
-  margin-left: 0;
+  margin-left: auto;
+  min-width: 132px;
   background-color: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
   z-index: 30;
   -webkit-app-region: no-drag;
 }
 
+.desktop-titlebar .topbar-window-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 34px;
+  width: 132px;
+  min-width: 132px;
+  margin-left: 0;
+  z-index: 100;
+}
+
 .topbar-window-controls button {
-  width: 40px;
-  min-width: 40px;
+  width: 44px;
+  min-width: 44px;
   height: auto;
-  min-height: 42px;
+  min-height: 34px;
   padding: 0;
   border-radius: 0;
   border-top: 0;
@@ -419,6 +484,9 @@ button.danger:hover:not(:disabled) {
   border-right: 0;
   background-color: transparent;
   color: var(--color-mutedText);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .topbar-window-controls button:hover:not(:disabled) {
@@ -501,14 +569,8 @@ button.danger:hover:not(:disabled) {
     row-gap: 0;
   }
 
-  .topbar-desktop-window {
-    padding-left: 122px;
-    padding-right: 6px;
-  }
-
-  html[data-desktop-window="true"] .topbar {
-    padding-left: 122px;
-    padding-right: 6px;
+  .topbar-toolbar-desktop {
+    padding: 4px 8px;
   }
 
   .topbar::-webkit-scrollbar {
@@ -575,8 +637,8 @@ button.danger:hover:not(:disabled) {
   }
 
   .topbar-window-controls button {
-    width: 38px;
-    min-width: 38px;
+    width: 42px;
+    min-width: 42px;
     padding: 0;
   }
 
@@ -633,14 +695,8 @@ button.danger:hover:not(:disabled) {
     gap: 4px;
   }
 
-  .topbar-desktop-window {
-    padding-left: 122px;
-    padding-right: 6px;
-  }
-
-  html[data-desktop-window="true"] .topbar {
-    padding-left: 122px;
-    padding-right: 6px;
+  .topbar-toolbar-desktop {
+    padding: 4px 6px;
   }
 
   .topbar > div:nth-child(2) {
