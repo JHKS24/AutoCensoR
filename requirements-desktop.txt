@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 AutoCensor Project Owner and contributors
+# SPDX-License-Identifier: MIT
+
+# Optional desktop-window extra for backend/autocensor_desktop.py.
+# pywebview is BSD-3-Clause (MIT-compatible). It renders through the platform
+# WebView (Edge WebView2 on Windows, WebKit on macOS/Linux) and pulls the
+# correct platform backend via its own environment markers. It is not required
+# for the headless CLI or the local server runtime.
+pywebview>=5.0,<6

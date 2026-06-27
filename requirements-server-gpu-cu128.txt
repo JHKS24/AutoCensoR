@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 AutoCensor Project Owner and contributors
+# SPDX-License-Identifier: MIT
+
+--index-url https://download.pytorch.org/whl/cu128
+--extra-index-url https://pypi.org/simple
+
+-r requirements.txt
+torch==2.11.0+cu128
+torchvision==0.26.0+cu128

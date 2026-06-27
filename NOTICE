@@ -1,0 +1,11 @@
+AutoCensor vNext
+
+This repository contains source code only. Model weights, private datasets,
+personal paths, account links, API keys, telemetry, and cloud-upload code are
+not included.
+
+No fonts are bundled. Korean and English UI text is stored as UTF-8 and rendered
+with operating-system font fallbacks.
+
+Runtime dependencies are installed separately and are not relicensed by this
+project. Review dependency licenses before shipping a bundled runtime.
